@@ -10,9 +10,9 @@ import sys
 import numpy as np
 import pandas as pd
 
-#abspath = os.path.abspath('Documents/Classes/CS590U/Final_Project/data/Alex.txt')
-#dname = os.path.dirname(abspath)
-#os.chdir(dname)
+abspath = os.path.abspath('Documents/Classes/CS590U/ubitalk_analysis/data/Alex.txt')
+dname = os.path.dirname(abspath)
+os.chdir(dname)
 
 files = os.listdir()
 files = [file for file in files]
@@ -32,3 +32,4 @@ def gather_data():
     return df_final
 
 df = gather_data()
+df.to_csv(path_or_buf = os.getcwd() + "/final_data.csv", index=False)
