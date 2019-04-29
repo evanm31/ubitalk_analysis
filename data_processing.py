@@ -15,7 +15,7 @@ import pandas as pd
 #os.chdir(dname)
 
 files = os.listdir()
-files = [file for file in files if file is not ".DS_Store"]
+files = [file for file in files]
 
 def gather_data():
     first = True #if first, create dataframe for future concatenations
