@@ -3,6 +3,8 @@ require(tidyverse)
 require(ggpubr)
 require(lubridate)
 
+theme_set(theme_bw())
+
 p1 <- "Sea turtles are large, air-breathing reptiles that inhabit tropical and subtropical seas throughout the world. Their shells consist of an upper part (carapace) and a lower section (plastron). Hard scales (or scutes) cover all but the leatherback, and the number and arrangement of these scutes can be used to determine the species.
 Sea turtles come in many different sizes, shapes and colors. The olive ridley is usually less than 100 pounds, while the leatherback typically ranges from 650 to 1,300 pounds! The upper shell, or carapace, of each sea turtle species ranges in length, color, shape and arrangement of scales.
 Sea turtles do not have teeth, but their jaws have modified “beaks” suited to their particular diet. They do not have visible ears but have eardrums covered by skin. They hear best at low frequencies, and their sense of smell is excellent. Their vision underwater is good, but they are nearsighted out of water. Their streamlined bodies and large flippers make them remarkably adapted to life at sea. However, sea turtles maintain close ties to land."
@@ -37,7 +39,6 @@ app_data <- read_csv("data/final_data.csv")
 
 #USER DATA 
 #speaking speed
-#fix anova location
 p <- user_data %>% 
   gather("speed", "wpm", 1:3) %>% 
   ggboxplot(x = "speed", y = "wpm", 
@@ -93,6 +94,25 @@ user_data %>%
   ggplot(aes(x = Name, y = wpm, fill = difference)) + 
   geom_bar(stat = "identity", position = "dodge")
 
+#by app first 
+p <- user_data %>% 
+  gather("group", "wpm", 12:13) %>% 
+  ggboxplot(x = "first_read", y = "wpm",
+            color = "first_read", palette = "jco",
+            add = "jitter") + 
+stat_compare_means()
+ggpar(p)
+
+#plot of WPM by speed
+#arrange each in descending order? 
+user_data %>% 
+  gather("speed", "wpm", 1:3) %>% 
+  group_by(speed) %>% 
+  ggplot(aes(x = reorder(Name, -wpm), y = wpm, fill = speed)) + 
+  geom_bar(stat = "identity") + 
+  facet_grid(~speed) + 
+  labs()
+
 #APP DATA 
 app_data <- app_data %>%
   group_by(participant) %>%
@@ -127,6 +147,21 @@ app_data %>%
   geom_line() + 
   facet_grid(participant~.)
 
-#linear regression - words by time (too boring to model) 
-#mod <- lm(n_words_total ~ time, app_data)
-  
+#compare observed to actual WPM 
+totals <- app_data %>% 
+  group_by(participant) %>% 
+  select(n_words_total) %>% 
+  slice(n()) %>% 
+  filter(participant != "Quentin")
+
+observed_avg <- mean(totals[1:7,"n_words_total"] %>% select(n_words_total) %>% .$n_words_total)
+observed_avg / len_p1 #about 3x WPM in app 
+
+#plot of actual vs. observed
+totals %>% 
+  ggplot(aes(x = reorder(participant, -n_words_total), y = n_words_total)) + 
+  geom_bar(stat = "identity", alpha = 0.5) + 
+  geom_hline(aes(yintercept = len_p1)) + 
+  annotate("text", x = 4, y = len_p1 + 15, label = "Actual word count") + 
+  labs(x = "Participant", y = "Observed Words (by app)", title = "Observed Word Count by Participant") + 
+  scale_y_continuous(breaks = seq(0, 600, 50))

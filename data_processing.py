@@ -15,7 +15,7 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 
 files = os.listdir()
-files = [file for file in files]
+files = [file for file in files if file not in ('.DS_Store', 'final_data.csv')]
 
 def gather_data():
     first = True #if first, create dataframe for future concatenations
