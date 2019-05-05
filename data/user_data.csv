@@ -1,4 +1,4 @@
-"","Fast","Normal","Slow","name","gender","age","native_speaker","fast_threshold","date","N_sec","F_sec","S_sec","first_read","comments","control_time","treatment_time","wpm_treatment","wpm_control"
+"","Fast","Normal","Slow","name","gender","age","native_speaker","fast_threshold","date","N_sec","F_sec","S_sec","first_read","comments","control_time","treatment_time","Treatment","Control"
 "1",273.062730627306,173.302107728337,103.593093793747,"Quentin","M",23,"N",4.5,"4/29/2019",12.81,8.13,21.43,"app",NA,52.5,57.3,186.387434554974,203.428571428571
 "2",193.04347826087,121.978021978022,77.3519163763066,"Maddie","F",24,"Y",4.5,"4/29/2019",18.2,11.5,28.7,"no_app",NA,70,67.5,158.222222222222,152.571428571429
 "3",171.032357473035,123.333333333333,113.092205807438,"Deepshikha","F",28,"N",4.5,"4/29/2019",18,12.98,19.63,"app",NA,73.6,78.7,135.705209656925,145.108695652174
