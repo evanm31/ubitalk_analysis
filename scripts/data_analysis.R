@@ -44,11 +44,12 @@ p <- user_data %>%
             add = "jitter",
             color = "speed", palette = "jco") +
   stat_compare_means(method = "anova")
-ggpar(p, 
+p <- ggpar(p, 
       legend = "none",
       main = "WPM by Speech Time",
       xlab = "Speech Speed",
       ylab = "Words Per Minute")
+ggexport(p, filename = "figures/p2_speed_differences.png")
 
 #treatment vs.control WPM
 p <- user_data %>% 
@@ -57,11 +58,12 @@ p <- user_data %>%
             add = "jitter",
             color = "group", palette = "jco") +
   stat_compare_means()
-ggpar(p, 
+p <- ggpar(p, 
       legend = "none",
       main = "WPM by Group",
       xlab = "Group",
       ylab = "Words Per Minute")
+ggexport(p, filename = "figures/p1_speed_differences.png")
 
 #gender differences 
 p <- user_data %>% 
@@ -71,7 +73,12 @@ p <- user_data %>%
             add = "jitter",
             facet.by = "group", short.panel.labs = FALSE) +
   stat_compare_means()
-ggpar(p)
+p <- ggpar(p,
+           legend = "none",
+           main = "WPM by Gender/Group",
+           xlab = "Gender",
+           ylab = "Words Per Minute")
+ggexport(p, filename = "figures/gender_speed_differences.png")
 
 #native speaker differences 
 p <- user_data %>% 
@@ -81,17 +88,24 @@ p <- user_data %>%
             add = "jitter",
             facet.by = "group", short.panel.labs = FALSE) +
   stat_compare_means()
-ggpar(p)
+p <- ggpar(p,
+      legend = "none",
+      main = "WPM by Speaker Status/Group",
+      xlab = "Native Speaker?",
+      ylab = "Words Per Minute")
+ggexport(p, filename = "figures/native_speaker_speed_differences.png")
 
 #speed differences 
-user_data %>% 
+p <- user_data %>% 
   group_by(name) %>% 
   summarise(high_med = Fast - Normal,
             med_low = Normal - Slow,
             high_low = Fast - Slow) %>% 
   gather("difference", "wpm", 2:4) %>%
   ggplot(aes(x = name, y = wpm, fill = difference)) + 
-  geom_bar(stat = "identity", position = "dodge")
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Participant", y = "WPM difference", title = "Differences in WPM by Speaking Speed")
+ggsave(p, filename = "figures/wpm_difference_by_speaking_speed.png", device = "png") 
 
 #by app first 
 p <- user_data %>% 
@@ -100,49 +114,52 @@ p <- user_data %>%
             color = "first_read", palette = "jco",
             add = "jitter") + 
 stat_compare_means()
-ggpar(p)
+p <- ggpar(p,
+           legend = "none",
+           main = "WPM by First Read/Group",
+           xlab = "First Read",
+           ylab = "Words Per Minute")
+ggexport(p, filename = "figures/first_read_speed_differences.png")
 
 #plot of WPM by speed
-#arrange each in descending order? 
-user_data %>% 
+p <- user_data %>% 
   gather("speed", "wpm", 1:3) %>% 
   group_by(speed) %>% 
   ggplot(aes(x = reorder(name, -wpm), y = wpm, fill = speed)) + 
   geom_bar(stat = "identity") + 
   facet_grid(~speed) + 
-  labs()
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  labs(x = "Participant", y = "Words per Minute", title = "WPM by Speaking Speed")
+ggsave(p, filename = "figures/wpm_by_speaking_speed.png", device = "png") 
 
-#speaking speeds by age
-#no signal 
-user_data %>% 
+#speaking speeds by age - no signal 
+p <- user_data %>% 
   gather("group", "wpm", 15:16) %>% 
   ggplot(aes(x = age, y = wpm)) + 
   geom_point() +
-  facet_grid(~group)
+  facet_grid(~group) + 
+  labs(x = "Age", y = "Words per Minute", title = "Speaking Speed by Age")
+ggsave(p, filename = "figures/wpm_by_age.png", device = "png") 
   
 #APP DATA 
 app_data <- app_data %>%
   group_by(participant) %>%
   mutate(time = dplyr::row_number()) %>% 
-  filter(!(time %in% 1:2), participant != "Quentin") #remove faulty first two rows
+  filter(!(time %in% 1:2), participant != "Quentin") #remove faulty first two rows and outliers
 
 #arrange by percentage on pace
-app_data %>% 
+p <- app_data %>% 
   group_by(participant) %>% 
-  summarize(pct.slow = mean(speed == "Slow"),
-            pct.on_pace = mean(speed == "On_pace"),
-            pct.fast = mean(speed == "Fast")) %>% 
-  arrange(pct.on_pace) %>% 
+  summarize(`Slow` = mean(speed == "Slow"),
+            `On pace` = mean(speed == "On_pace"),
+            `Fast` = mean(speed == "Fast")) %>% 
   gather("speed", "percent", 2:4) %>%
   arrange(percent) %>%
   ggplot(aes(x = participant, y = percent, fill = speed)) + 
-  geom_bar(stat = "identity")
-
-#words over time - not interesting
-app_data %>% 
-  ggplot(aes(x = time, y = n_words_total)) + 
-  geom_line(group = 1) + 
-  facet_grid(participant~.)
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  geom_bar(stat = "identity") + 
+  labs(x = "Participant", y = "Percent", labs = "Percentage Speeds by Participant")
+ggsave(p, filename = "figures/percentage_speed.png", device = "png") 
 
 #states over time
 app_data %>% 
@@ -154,7 +171,9 @@ app_data %>%
   )) %>% 
   ggplot(aes(x = time, y = speed)) + 
   geom_line() + 
-  facet_grid(participant~.)
+  facet_grid(participant~.) + 
+  labs(x = "Time", y = "Speed", title = "Speed by Time") + 
+  scale_y_continuous(breaks = c(-1, 0, 1), labels = c("Slow", "On pace", "Fast"))
 
 #compare observed to actual WPM 
 totals <- app_data %>% 
@@ -166,10 +185,13 @@ observed_avg <- mean(totals[1:13,"n_words_total"] %>% select(n_words_total) %>% 
 observed_avg / len_p1 #about 3x WPM in app 
 
 #plot of actual vs. observed
-totals %>% 
+p <- totals %>% 
   ggplot(aes(x = reorder(participant, -n_words_total), y = n_words_total)) + 
   geom_bar(stat = "identity", alpha = 0.5) + 
   geom_hline(aes(yintercept = len_p1)) + 
   annotate("text", x = 4, y = len_p1 + 15, label = "Actual word count") + 
   labs(x = "Participant", y = "Observed Words (by app)", title = "Observed Word Count by Participant") + 
-  scale_y_continuous(breaks = seq(0, 600, 50))
+  scale_y_continuous(breaks = seq(0, 600, 50)) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggsave(p, filename = "figures/observed_vs_actual_wpm.png", device = "png") 
+
