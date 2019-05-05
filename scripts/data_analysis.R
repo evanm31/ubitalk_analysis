@@ -26,15 +26,14 @@ user_data <- ubitalk %>% mutate(
         wpm_S = (60/S_sec)*len_p2,
         wpm_N = (60/N_sec)*len_p2,
         wpm_F = (60/F_sec)*len_p2,
-        wpm_treatment = len_p1/treatment_time*60,
-        wpm_control = len_p1/control_time*60,
+        Treatment = len_p1/treatment_time*60,
+        Control = len_p1/control_time*60,
         treat_control_diff = (control_time - treatment_time),
         p_chnge = (treat_control_diff / control_time) * 100.0
         ) %>% 
   select("Fast" = wpm_F, "Normal" = wpm_N, "Slow" = wpm_S, everything(), -c(treatment_min, treatment_sec, control_min, control_sec))
 
 #user_data <- user_data %>% drop_na() # Drop NA values
-
 write.csv(user_data, file = "data/user_data.csv") #for reproducible results without google sheets access 
 app_data <- read_csv("data/final_data.csv")
 
@@ -55,7 +54,6 @@ ggpar(p,
       ylab = "Words Per Minute")
 ggexport(p, filename = "figures/p2_speed_differences.png")
 
-
 #treatment vs.control WPM
 p <- user_data %>% 
   gather("group", "wpm", 17:18) %>% 
@@ -68,13 +66,7 @@ ggpar(p,
       main = "WPM by Group",
       xlab = "Group",
       ylab = "Words Per Minute")
-<<<<<<< HEAD
 ggexport(p, filename = "figures/p1_group_speed_differences.png")
-=======
-
-ggexport(p, filename = "figures/p1_speed_differences.png")
->>>>>>> 6131e205f9bb14cc1a160de77cb5fc88a09c0700
-
 
 ## ~~~~ KATIE'S PLOTS ~~~~~~~~~~~~~~~~~
 #treatment vs.control WPM 
@@ -85,13 +77,14 @@ df <- data.frame(f1=user_data$fast_threshold, label=c("low tresh","high thresh")
                  f2= p2, label=c("treatment","control"),
                  stringsAsFactors = FALSE)
 df$f1f2 <- interaction(df $f1, df$f2.group)
-ggplot(aes(y = f2.wpm, x = f2.group, fill = f1), 
+p <- ggplot(aes(y = f2.wpm, x = f2.group, fill = f1), 
           data = df) +
           labs(fill='Fast Thresh') +
           geom_boxplot() + 
           xlab(' Treatment vs. Control') + 
           ylab('Words per Minute') +
-          ggtitle('Comparing Fast Thresholds affect on WPM')
+          ggtitle('Comparing Fast Thresholds Effect on WPM')
+ggsave(p, filename = "figures/threshold_wpm.png", device = "png") 
 
 # Compare WPM for first read app or No app
 user_data$fast_threshold <- factor(user_data$fast_threshold)
@@ -101,16 +94,17 @@ df <- data.frame(f1=user_data$first_read,
                  f2= p2, label=c("treatment","control"),
                  stringsAsFactors = FALSE)
 df$f1f2 <- interaction(df $f1, df$f2.group)
-ggplot(aes(y = f2.wpm, x = f2.group, fill = f1), 
+p <- ggplot(aes(y = f2.wpm, x = f2.group, fill = f1), 
        data = df) +
   labs(fill='Fast Thresh') +
   geom_boxplot() + 
   xlab(' Treatment vs. Control') + 
   ylab('Words per Minute') +
-  ggtitle('Comparing Fast Thresholds affect on WPM')
+  ggtitle('Comparing First Read App Effect on WPM')
+ggsave(p, filename = "figures/first_read_wpm.png", device = "png") 
 
 #treatment vs.control WPM -- Pct Change
-ggplot(aes(y = p_chnge, 
+p <- ggplot(aes(y = p_chnge, 
            x = reorder(name,-p_chnge)),
           data = user_data) +
           xlab('Name') + 
@@ -118,6 +112,7 @@ ggplot(aes(y = p_chnge,
           ggtitle('Percent Change in WPM') +
           theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
           geom_bar(stat = "identity",fill = "#FF6666")
+ggsave(p, filename = "figures/wpm_pct_change_by_group.png", device = "png") 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #gender differences 
@@ -211,7 +206,7 @@ p <- app_data %>%
             `Fast` = mean(speed == "Fast")) %>% 
   gather("speed", "percent", 2:4) %>%
   arrange(percent) %>%
-  ggplot(aes(x = participant, y = percent, fill = speed)) + 
+  ggplot(aes(x = participant, y = 100*percent, fill = speed)) + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
   geom_bar(stat = "identity") + 
   labs(x = "Participant", y = "Percent", title = "Percentage Speeds by Participant", fill = "Speed")
