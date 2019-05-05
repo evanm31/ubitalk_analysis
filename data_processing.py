@@ -10,7 +10,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-abspath = os.path.abspath('C:\\Users\\house\\Documents\\GitHub\\ubitalk_analysis\\data\\Alex.txt')
+abspath = os.path.abspath('Documents/Classes/CS590U/ubitalk_analysis/data/Alex.txt')
 dname = os.path.dirname(abspath)
 os.chdir(dname)
 

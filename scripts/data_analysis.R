@@ -7,7 +7,7 @@ theme_set(theme_bw())
 
 p1 <- "Sea turtles are large, air-breathing reptiles that inhabit tropical and subtropical seas throughout the world. Their shells consist of an upper part (carapace) and a lower section (plastron). Hard scales (or scutes) cover all but the leatherback, and the number and arrangement of these scutes can be used to determine the species.
 Sea turtles come in many different sizes, shapes and colors. The olive ridley is usually less than 100 pounds, while the leatherback typically ranges from 650 to 1,300 pounds! The upper shell, or carapace, of each sea turtle species ranges in length, color, shape and arrangement of scales.
-Sea turtles do not have teeth, but their jaws have modified “beaks” suited to their particular diet. They do not have visible ears but have eardrums covered by skin. They hear best at low frequencies, and their sense of smell is excellent. Their vision underwater is good, but they are nearsighted out of water. Their streamlined bodies and large flippers make them remarkably adapted to life at sea. However, sea turtles maintain close ties to land."
+Sea turtles do not have teeth, but their jaws have modified beaks suited to their particular diet. They do not have visible ears but have eardrums covered by skin. They hear best at low frequencies, and their sense of smell is excellent. Their vision underwater is good, but they are nearsighted out of water. Their streamlined bodies and large flippers make them remarkably adapted to life at sea. However, sea turtles maintain close ties to land."
 
 p2 <- "Machines powered by artificial intelligence increasingly mediate our social, cultural, economic and political interactions. 
 Understanding the behaviour of artificial intelligence systems is essential
@@ -20,16 +20,20 @@ ubitalk <- gs_title("UbiTalk User Study")
 ubitalk <- ubitalk %>%
   gs_read() 
 
-user_data <- ubitalk %>% 
-        mutate(control_time = ifelse(control_min == 1, 60 + control_sec, control_sec),
-        treatment_time = ifelse(treatment_min == 1, 60 + treatment_sec, treatment_sec),
-        wpm_S = (len_p2/S_sec)*60,
-        wpm_N = (len_p2/N_sec)*60,
-        wpm_F = (len_p2/F_sec)*60,
-        Treatment = (len_p1/treatment_time)*60,
-        Control = (len_p1/control_time)*60
-  ) %>% 
+user_data <- ubitalk %>% mutate(
+        control_time = control_min*60 + control_sec,
+        treatment_time = treatment_min*60 + treatment_sec,
+        wpm_S = (60/S_sec)*len_p2,
+        wpm_N = (60/N_sec)*len_p2,
+        wpm_F = (60/F_sec)*len_p2,
+        wpm_treatment = len_p1/treatment_time*60,
+        wpm_control = len_p1/control_time*60,
+        treat_control_diff = (control_time - treatment_time),
+        p_chnge = (treat_control_diff / control_time) * 100.0
+        ) %>% 
   select("Fast" = wpm_F, "Normal" = wpm_N, "Slow" = wpm_S, everything(), -c(treatment_min, treatment_sec, control_min, control_sec))
+
+#user_data <- user_data %>% drop_na() # Drop NA values
 
 write.csv(user_data, file = "data/user_data.csv") #for reproducible results without google sheets access 
 app_data <- read_csv("data/final_data.csv")
@@ -44,12 +48,13 @@ p <- user_data %>%
             add = "jitter",
             color = "speed", palette = "jco") +
   stat_compare_means(method = "anova")
-p <- ggpar(p, 
+ggpar(p, 
       legend = "none",
       main = "WPM by Speech Time",
       xlab = "Speech Speed",
       ylab = "Words Per Minute")
 ggexport(p, filename = "figures/p2_speed_differences.png")
+
 
 #treatment vs.control WPM
 p <- user_data %>% 
@@ -58,12 +63,62 @@ p <- user_data %>%
             add = "jitter",
             color = "group", palette = "jco") +
   stat_compare_means()
-p <- ggpar(p, 
+ggpar(p, 
       legend = "none",
       main = "WPM by Group",
       xlab = "Group",
       ylab = "Words Per Minute")
+<<<<<<< HEAD
 ggexport(p, filename = "figures/p1_group_speed_differences.png")
+=======
+
+ggexport(p, filename = "figures/p1_speed_differences.png")
+>>>>>>> 6131e205f9bb14cc1a160de77cb5fc88a09c0700
+
+
+## ~~~~ KATIE'S PLOTS ~~~~~~~~~~~~~~~~~
+#treatment vs.control WPM 
+user_data$fast_threshold <- factor(user_data$fast_threshold)
+p2 <- user_data %>% 
+  gather("group", "wpm", 17:18) 
+df <- data.frame(f1=user_data$fast_threshold, label=c("low tresh","high thresh"), 
+                 f2= p2, label=c("treatment","control"),
+                 stringsAsFactors = FALSE)
+df$f1f2 <- interaction(df $f1, df$f2.group)
+ggplot(aes(y = f2.wpm, x = f2.group, fill = f1), 
+          data = df) +
+          labs(fill='Fast Thresh') +
+          geom_boxplot() + 
+          xlab(' Treatment vs. Control') + 
+          ylab('Words per Minute') +
+          ggtitle('Comparing Fast Thresholds affect on WPM')
+
+# Compare WPM for first read app or No app
+user_data$fast_threshold <- factor(user_data$fast_threshold)
+p2 <- user_data %>% 
+  gather("group", "wpm", 17:18) 
+df <- data.frame(f1=user_data$first_read,
+                 f2= p2, label=c("treatment","control"),
+                 stringsAsFactors = FALSE)
+df$f1f2 <- interaction(df $f1, df$f2.group)
+ggplot(aes(y = f2.wpm, x = f2.group, fill = f1), 
+       data = df) +
+  labs(fill='Fast Thresh') +
+  geom_boxplot() + 
+  xlab(' Treatment vs. Control') + 
+  ylab('Words per Minute') +
+  ggtitle('Comparing Fast Thresholds affect on WPM')
+
+#treatment vs.control WPM -- Pct Change
+ggplot(aes(y = p_chnge, 
+           x = reorder(name,-p_chnge)),
+          data = user_data) +
+          xlab('Name') + 
+          ylab('WPM % Change') +
+          ggtitle('Percent Change in WPM') +
+          theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+          geom_bar(stat = "identity",fill = "#FF6666")
+## ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #gender differences 
 p <- user_data %>% 
@@ -89,10 +144,10 @@ p <- user_data %>%
             facet.by = "group", short.panel.labs = FALSE) +
   stat_compare_means()
 p <- ggpar(p,
-      legend = "none",
-      main = "WPM by Speaker Status/Group",
-      xlab = "Native Speaker?",
-      ylab = "Words Per Minute")
+           legend = "none",
+           main = "WPM by Speaker Status/Group",
+           xlab = "Native Speaker?",
+           ylab = "Words Per Minute")
 ggexport(p, filename = "figures/native_speaker_speed_differences.png")
 
 #speed differences 
@@ -114,7 +169,7 @@ p <- user_data %>%
   ggboxplot(x = "first_read", y = "wpm",
             color = "first_read", palette = "jco",
             add = "jitter") + 
-stat_compare_means()
+  stat_compare_means()
 p <- ggpar(p,
            legend = "none",
            main = "WPM by First Read/Group",
@@ -141,7 +196,7 @@ p <- user_data %>%
   facet_grid(~group) + 
   labs(x = "Age", y = "Words per Minute", title = "Speaking Speed by Age")
 ggsave(p, filename = "figures/wpm_by_age.png", device = "png") 
-  
+
 #APP DATA 
 app_data <- app_data %>%
   group_by(participant) %>%
@@ -196,4 +251,3 @@ p <- totals %>%
   scale_y_continuous(breaks = seq(0, 600, 50)) + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ggsave(p, filename = "figures/observed_vs_actual_wpm.png", device = "png") 
-
