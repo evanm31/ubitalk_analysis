@@ -20,19 +20,18 @@ ubitalk <- gs_title("UbiTalk User Study")
 ubitalk <- ubitalk %>%
   gs_read() 
 
-user_data <- ubitalk[2:9, 1:10] %>% 
+user_data <- ubitalk %>% 
         mutate(control_time = ifelse(control_min == 1, 60 + control_sec, control_sec),
         treatment_time = ifelse(treatment_min == 1, 60 + treatment_sec, treatment_sec),
         wpm_S = (60/S_sec)*len_p2,
         wpm_N = (60/N_sec)*len_p2,
         wpm_F = (60/F_sec)*len_p2,
         wpm_treatment = ifelse(treatment_time < 60, (treatment_time/60)*len_p1, (60/treatment_time)*len_p1),
-        wpm_control = ifelse(control_time < 60, (control_time/60)*len_p1, (60/control_time)*len_p1),
-        gender = ifelse(Name %in% c("Alex", "Quentin", "Colin"), "male", "female"),
-        native_speaker = ifelse(Name %in% c("Isha", "Deepshikha", "Quentin", "Esrath"), "no", "yes")
+        wpm_control = ifelse(control_time < 60, (control_time/60)*len_p1, (60/control_time)*len_p1)
   ) %>% 
   select("Fast" = wpm_F, "Normal" = wpm_N, "Slow" = wpm_S, everything(), -c(treatment_min, treatment_sec, control_min, control_sec))
 
+write.csv(user_data, file = "data/user_data.csv") #for reproducible results without google sheets access 
 app_data <- read_csv("data/final_data.csv")
 
 #VISUALIZATIONS 
@@ -53,7 +52,7 @@ ggpar(p,
 
 #treatment vs.control WPM
 p <- user_data %>% 
-  gather("group", "wpm", 12:13) %>% 
+  gather("group", "wpm", 15:16) %>% 
   ggboxplot(x = "group", y = "wpm",
             add = "jitter",
             color = "group", palette = "jco") +
@@ -66,7 +65,7 @@ ggpar(p,
 
 #gender differences 
 p <- user_data %>% 
-  gather("group", "wpm", 12:13) %>% 
+  gather("group", "wpm", 15:16) %>% 
   ggboxplot(x = "gender", y = "wpm",
             color = "gender", palette = "jco",
             add = "jitter",
@@ -76,7 +75,7 @@ ggpar(p)
 
 #native speaker differences 
 p <- user_data %>% 
-  gather("group", "wpm", 12:13) %>% 
+  gather("group", "wpm", 15:16) %>% 
   ggboxplot(x = "native_speaker", y = "wpm",
             color = "native_speaker", palette = "jco",
             add = "jitter",
@@ -86,17 +85,17 @@ ggpar(p)
 
 #speed differences 
 user_data %>% 
-  group_by(Name) %>% 
+  group_by(name) %>% 
   summarise(high_med = Fast - Normal,
             med_low = Normal - Slow,
             high_low = Fast - Slow) %>% 
   gather("difference", "wpm", 2:4) %>%
-  ggplot(aes(x = Name, y = wpm, fill = difference)) + 
+  ggplot(aes(x = name, y = wpm, fill = difference)) + 
   geom_bar(stat = "identity", position = "dodge")
 
 #by app first 
 p <- user_data %>% 
-  gather("group", "wpm", 12:13) %>% 
+  gather("group", "wpm", 15:16) %>% 
   ggboxplot(x = "first_read", y = "wpm",
             color = "first_read", palette = "jco",
             add = "jitter") + 
@@ -108,15 +107,24 @@ ggpar(p)
 user_data %>% 
   gather("speed", "wpm", 1:3) %>% 
   group_by(speed) %>% 
-  ggplot(aes(x = reorder(Name, -wpm), y = wpm, fill = speed)) + 
+  ggplot(aes(x = reorder(name, -wpm), y = wpm, fill = speed)) + 
   geom_bar(stat = "identity") + 
   facet_grid(~speed) + 
   labs()
 
+#speaking speeds by age
+#no signal 
+user_data %>% 
+  gather("group", "wpm", 15:16) %>% 
+  ggplot(aes(x = age, y = wpm)) + 
+  geom_point() +
+  facet_grid(~group)
+  
 #APP DATA 
 app_data <- app_data %>%
   group_by(participant) %>%
-  mutate(time = dplyr::row_number())
+  mutate(time = dplyr::row_number()) %>% 
+  filter(!(time %in% 1:2), participant != "Quentin") #remove faulty first two rows
 
 #arrange by percentage on pace
 app_data %>% 
@@ -124,8 +132,9 @@ app_data %>%
   summarize(pct.slow = mean(speed == "Slow"),
             pct.on_pace = mean(speed == "On_pace"),
             pct.fast = mean(speed == "Fast")) %>% 
+  arrange(pct.on_pace) %>% 
   gather("speed", "percent", 2:4) %>%
-  arrange(percent) %>% 
+  arrange(percent) %>%
   ggplot(aes(x = participant, y = percent, fill = speed)) + 
   geom_bar(stat = "identity")
 
@@ -151,10 +160,9 @@ app_data %>%
 totals <- app_data %>% 
   group_by(participant) %>% 
   select(n_words_total) %>% 
-  slice(n()) %>% 
-  filter(participant != "Quentin")
+  slice(n())
 
-observed_avg <- mean(totals[1:7,"n_words_total"] %>% select(n_words_total) %>% .$n_words_total)
+observed_avg <- mean(totals[1:13,"n_words_total"] %>% select(n_words_total) %>% .$n_words_total)
 observed_avg / len_p1 #about 3x WPM in app 
 
 #plot of actual vs. observed
