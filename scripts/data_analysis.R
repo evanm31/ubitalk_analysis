@@ -67,7 +67,7 @@ ggexport(p, filename = "figures/p1_group_speed_differences.png")
 
 #gender differences 
 p <- user_data %>% 
-  gather("group", "wpm", 15:16) %>% 
+  gather("group", "wpm", 17:18) %>% 
   ggboxplot(x = "gender", y = "wpm",
             color = "gender", palette = "jco",
             add = "jitter",
@@ -82,7 +82,7 @@ ggexport(p, filename = "figures/gender_speed_differences.png")
 
 #native speaker differences 
 p <- user_data %>% 
-  gather("group", "wpm", 15:16) %>% 
+  gather("group", "wpm", 17:18) %>% 
   ggboxplot(x = "native_speaker", y = "wpm",
             color = "native_speaker", palette = "jco",
             add = "jitter",
@@ -110,7 +110,7 @@ ggsave(p, filename = "figures/wpm_difference_by_speaking_speed.png", device = "p
 
 #by app first 
 p <- user_data %>% 
-  gather("group", "wpm", 15:16) %>% 
+  gather("group", "wpm", 17:18) %>% 
   ggboxplot(x = "first_read", y = "wpm",
             color = "first_read", palette = "jco",
             add = "jitter") + 
@@ -135,7 +135,7 @@ ggsave(p, filename = "figures/wpm_by_speaking_speed.png", device = "png")
 
 #speaking speeds by age - no signal 
 p <- user_data %>% 
-  gather("group", "wpm", 15:16) %>% 
+  gather("group", "wpm", 17:18) %>% 
   ggplot(aes(x = age, y = wpm)) + 
   geom_point() +
   facet_grid(~group) + 
@@ -173,7 +173,7 @@ p <- app_data %>%
   ggplot(aes(x = time, y = speed)) + 
   geom_line() + 
   facet_grid(participant~.) + 
-  labs(x = "Time", y = "Speed", title = "Speed Over Time") + 
+  labs(x = "Time", y = "Speed", title = "Speed Over Time by Participant") + 
   scale_y_continuous(breaks = c(-1, 0, 1), labels = c("Slow", "On pace", "Fast"))
 ggsave(p, filename = "figures/speed_over_time.png", device = "png") 
 
