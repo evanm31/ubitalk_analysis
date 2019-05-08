@@ -246,3 +246,16 @@ p <- totals %>%
   scale_y_continuous(breaks = seq(0, 600, 50)) + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ggsave(p, filename = "figures/observed_vs_actual_wpm.png", device = "png") 
+
+
+p <- user_data %>% 
+  gather("group", "wpm", 17:18)
+#p$group <- factor(p$group, levels = c('wpm_without_app','wpm_with_app'))
+ggplot(p, aes(fill = group, x = reorder(name,-p_chnge), y = wpm)) +
+  geom_ribbon(aes(ymin=100,ymax=150), fill="blue", alpha="0.5") +
+  geom_bar(position="dodge", stat="identity") +
+  theme(axis.text.x = element_text(angle = 40, hjust = 1)) +
+  geom_hline(yintercept=150) +
+  geom_hline(yintercept=100) +
+  xlab('Name') + 
+  ylab('WPM')
